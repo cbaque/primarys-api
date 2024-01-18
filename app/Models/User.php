@@ -13,7 +13,7 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
-    public $timestamps = true;
+    // protected $primaryKey = 'name';
 
     /**
      * The attributes that are mass assignable.

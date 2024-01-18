@@ -8,6 +8,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Response;
+use App\Models\Business;
 class AuthController extends Controller
 {
     /**
@@ -36,19 +37,25 @@ class AuthController extends Controller
     public function store(Request $request)
     {
         $loginData = $request->validate([
+            'business' => 'required',
             'name' => 'required',
             'password' => 'required'
         ]);
 
-        if ( ! Auth::attempt( $loginData ) ) {
+        $business = Business::where('ruc', $loginData['business'])->first();
+        if (!isset($business)) {
+            return response_data([], Response::HTTP_METHOD_NOT_ALLOWED, 'Empresa no existe, verificar');
+        }
+
+        if (!Auth::attempt(['name' => $loginData['name'], 'password' => $loginData['password']], 'business_id', $business->id)) {
             return response_data([], Response::HTTP_METHOD_NOT_ALLOWED, 'Credenciales Incorrectas.');
         }
-        
+
         $token = Auth::user()->createToken('authToken')->accessToken;
-        
-        return response_data([ 
-            'user' => Auth::user()->name, 
-            'token' => $token, 
+
+        return response_data([
+            'user' => Auth::user()->name,
+            'token' => $token,
         ], Response::HTTP_OK, 'Login correctamente.');
     }
 
