@@ -6,8 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-
-class Business extends Model
+class Product extends Model
 {
     use HasFactory, SoftDeletes;
 
@@ -17,21 +16,11 @@ class Business extends Model
      * @var array
      */
     protected $fillable = [
-        'name', 'ruc', 'email', 'path_logo'
+        'barcode', 'description', 'purchase_price', 'sale_price', 'existence', 'business_id'
     ];
 
-    public function users()
+    public function business()
     {
-        return $this->hasMany(User::class);
-    }
-
-    public function customers()
-    {
-        return $this->hasMany(Customer::class);
-    }
-
-    public function products()
-    {
-        return $this->hasMany(Product::class);
+        return $this->belongsTo(Business::class);
     }
 }
