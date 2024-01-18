@@ -52,9 +52,11 @@ class AuthController extends Controller
         }
 
         $token = Auth::user()->createToken('authToken')->accessToken;
+        $user = Auth::user()->with('business')->first();
 
         return response_data([
-            'user' => Auth::user()->name,
+            'user' => $user->name,
+            'business' => $user->business->name,
             'token' => $token,
         ], Response::HTTP_OK, 'Login correctamente.');
     }
