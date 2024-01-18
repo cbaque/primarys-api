@@ -1,18 +1,16 @@
 <?php
 
-namespace Modules\User\Http\Controllers;
+namespace Modules\Customer\Http\Controllers;
 
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Hash;
-
-use App\Models\Business;
-use App\Models\User;
 use App\Models\People;
+use App\Models\Customer;
+use App\Models\Business;
 
-class UserController extends Controller
+class CustomerController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -24,7 +22,7 @@ class UserController extends Controller
             $user = auth()->user();
             $userBusiness = Business::find($user->business_id);
 
-            return response_data($userBusiness->users()->with('people')->get(), Response::HTTP_OK, 'Datos Leídos correctamente.');
+            return response_data($userBusiness->customers()->with('people')->get(), Response::HTTP_OK, 'Datos Leídos correctamente.');
         } catch (\Exception $ex) {
             return response_data([], Response::HTTP_INTERNAL_SERVER_ERROR, 'Error al procesar la petición');
         }
@@ -36,7 +34,7 @@ class UserController extends Controller
      */
     public function create()
     {
-        return view('user::create');
+        return view('customer::create');
     }
 
     /**
@@ -53,17 +51,15 @@ class UserController extends Controller
                 'phone' => $request->phone,
                 'address' => $request->address,
                 'email' => $request->email,
+                'dni' => $request->dni
             ]);
 
-            $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
+            $customer = Customer::create([
                 'business_id' => $business_id,
                 'people_id' => $people->id
             ]);
 
-            return response_data($user, Response::HTTP_CREATED, 'Usuario creado correctamente.');
+            return response_data($people, Response::HTTP_CREATED, 'Cliente creado correctamente.');
         } catch (\Exception $ex) {
             return response_data([], Response::HTTP_INTERNAL_SERVER_ERROR, $ex->getMessage());
         }
@@ -76,7 +72,7 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        return view('user::show');
+        return view('customer::show');
     }
 
     /**
@@ -88,11 +84,13 @@ class UserController extends Controller
     {
         try {
 
-            $user = User::find($id);
-            if (empty($user)) {
-                throw new \ErrorException( 'Usuario existe');
+            $customer = Customer::find($id);
+            if (empty($customer)) {
+                throw new \ErrorException( 'Cliente no existe');
             }
-            return response_data($user->with('people')->get(), Response::HTTP_OK, 'Usuario Leído correctamente.');
+
+            $customer = $customer->people;
+            return response_data($customer, Response::HTTP_OK, 'Cliente Leído correctamente.');
 
         } catch (\Exception $ex) {
             return response_data([], Response::HTTP_INTERNAL_SERVER_ERROR, $ex->getMessage());
@@ -109,25 +107,22 @@ class UserController extends Controller
     {
         try {
 
-            $user = User::find($id);
-            if (empty($user)) {
-                throw new \ErrorException( 'Usuario existe');
+            $customer = Customer::find($id);
+            if (empty($customer)) {
+                throw new \ErrorException( 'Cliente no existe');
             }
 
-            $user->name = $request->name;
-            $user->email = $request->email;
-            $user->save();
+            if ($customer->people) {
+                $customer->people->name = $request->name;
+                // $customer->people->dni = $request->dni;
+                $customer->people->phone = $request->phone;
+                $customer->people->email = $request->email;
+                $customer->people->address = $request->address;
 
-            if ($user->people) {
-                $user->people->name = $request->name;
-                $user->people->phone = $request->phone;
-                $user->people->email = $request->email;
-                $user->people->address = $request->address;
-
-                $user->people->save();
+                $customer->people->save();
             }
 
-            return response_data($user, Response::HTTP_OK, 'Usuario Actualizado correctamente.');
+            return response_data($customer->people, Response::HTTP_OK, 'Cliente Actualizado correctamente.');
 
         } catch (\Exception $ex) {
             return response_data([], Response::HTTP_INTERNAL_SERVER_ERROR, $ex->getMessage());
@@ -143,15 +138,15 @@ class UserController extends Controller
     {
         try {
 
-            $user = User::find($id);
-            if (empty($user)) {
-                throw new \ErrorException( 'Usuario existe');
+            $customer = Customer::find($id);
+            if (empty($customer)) {
+                throw new \ErrorException( 'Cliente existe');
             }
 
-            $user->people->delete();
-            $user->delete();
+            $customer->people->delete();
+            $customer->delete();
 
-            return response_data($user, Response::HTTP_OK, 'Usuario Eliminado correctamente.');
+            return response_data($customer, Response::HTTP_OK, 'Cliente Eliminado correctamente.');
 
         } catch (\Exception $ex) {
             return response_data([], Response::HTTP_INTERNAL_SERVER_ERROR, $ex->getMessage());
