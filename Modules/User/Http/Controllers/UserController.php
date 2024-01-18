@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 
 use App\Models\Business;
 use App\Models\User;
+use App\Models\People;
 
 class UserController extends Controller
 {
@@ -23,9 +24,9 @@ class UserController extends Controller
             $user = auth()->user();
             $userBusiness = Business::find($user->business_id);
 
-            return response_data($userBusiness->users, Response::HTTP_OK, 'Datos Leídos correctamente.');
+            return response_data($userBusiness->users()->with('people')->get(), Response::HTTP_OK, 'Datos Leídos correctamente.');
         } catch (\Exception $ex) {
-            return response_data([], Response::HTTP_INTERNAL_SERVER_ERROR, 'Error al procesa la petición');
+            return response_data([], Response::HTTP_INTERNAL_SERVER_ERROR, 'Error al procesar la petición');
         }
     }
 
@@ -48,16 +49,24 @@ class UserController extends Controller
         try {
 
             $business_id = $user = auth()->user()->business_id;
+            $people = People::create([
+                'name' => $request->name,
+                'phone' => $request->phone,
+                'address' => $request->address
+            ]);
+
+
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
-                'business_id' => $business_id
+                'business_id' => $business_id,
+                'people_id' => $people->id
             ]);
 
             return response_data($user, Response::HTTP_CREATED, 'Usuario creado correctamente.');
         } catch (\Exception $ex) {
-            return response_data([], Response::HTTP_INTERNAL_SERVER_ERROR, 'Error al crear usuarios, consulte con administrador');
+            return response_data([], Response::HTTP_INTERNAL_SERVER_ERROR, 'Error al crear usuarios, consulte con administrador' . $ex);
         }
     }
 

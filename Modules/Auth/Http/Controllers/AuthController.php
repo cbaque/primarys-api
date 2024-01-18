@@ -36,29 +36,37 @@ class AuthController extends Controller
      */
     public function store(Request $request)
     {
-        $loginData = $request->validate([
-            'business' => 'required',
-            'name' => 'required',
-            'password' => 'required'
-        ]);
+        try {
+            $loginData = $request->validate([
+                'business' => 'required',
+                'email' => 'required',
+                'password' => 'required'
+            ]);
 
-        $business = Business::where('ruc', $loginData['business'])->first();
-        if (!isset($business)) {
-            return response_data([], Response::HTTP_METHOD_NOT_ALLOWED, 'Empresa no existe, verificar');
+            $business = Business::where('ruc', $loginData['business'])->first();
+            if (!isset($business)) {
+                throw new \ErrorException( 'Empresa no existe, verificar');
+            }
+
+            if (!Auth::attempt(['email' => $loginData['email'], 'password' => $loginData['password']])) {
+                throw new \ErrorException( 'Credenciales Incorrectas.');
+            }
+
+            if (auth()->user()->business_id !== $business->id) {
+                throw new \ErrorException( 'Usuario no perteneces a esa empresa.');
+            }
+
+            $token = Auth::user()->createToken('authToken')->accessToken;
+            $user = Auth::user();
+
+            return response_data([
+                'user' => $user->name,
+                'business' => $user->business->name,
+                'token' => $token,
+            ], Response::HTTP_OK, 'Login correctamente.');
+        } catch (\Exception $e) {
+            return response_data(null, Response::HTTP_INTERNAL_SERVER_ERROR , $e->getMessage() );
         }
-
-        if (!Auth::attempt(['name' => $loginData['name'], 'password' => $loginData['password']], 'business_id', $business->id)) {
-            return response_data([], Response::HTTP_METHOD_NOT_ALLOWED, 'Credenciales Incorrectas.');
-        }
-
-        $token = Auth::user()->createToken('authToken')->accessToken;
-        $user = Auth::user()->with('business')->first();
-
-        return response_data([
-            'user' => $user->name,
-            'business' => $user->business->name,
-            'token' => $token,
-        ], Response::HTTP_OK, 'Login correctamente.');
     }
 
     /**
