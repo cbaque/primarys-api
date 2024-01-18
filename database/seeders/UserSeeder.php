@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use App\Models\User;
+use App\Models\Business;
 class UserSeeder extends Seeder
 {
     /**
@@ -16,10 +17,12 @@ class UserSeeder extends Seeder
      */
     public function run()
     {
+        $business = Business::where('ruc', '0993384053001')->first();
         User::create([
             'name' => "admin",
             'email' => "admin@primarys.soft",
-            'password' => Hash::make('admin')
+            'password' => Hash::make('admin'),
+            'business_id' => $business->id
         ]);
     }
 }
