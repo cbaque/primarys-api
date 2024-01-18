@@ -55,7 +55,6 @@ class UserController extends Controller
                 'address' => $request->address
             ]);
 
-
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
@@ -66,7 +65,7 @@ class UserController extends Controller
 
             return response_data($user, Response::HTTP_CREATED, 'Usuario creado correctamente.');
         } catch (\Exception $ex) {
-            return response_data([], Response::HTTP_INTERNAL_SERVER_ERROR, 'Error al crear usuarios, consulte con administrador' . $ex);
+            return response_data([], Response::HTTP_INTERNAL_SERVER_ERROR, $ex->getMessage());
         }
     }
 
@@ -87,7 +86,17 @@ class UserController extends Controller
      */
     public function edit($id)
     {
-        return view('user::edit');
+        try {
+
+            $user = User::find($id);
+            if (empty($user)) {
+                throw new \ErrorException( 'Usuario existe');
+            }
+            return response_data($user->with('people')->get(), Response::HTTP_OK, 'Usuario Leído correctamente.');
+
+        } catch (\Exception $ex) {
+            return response_data([], Response::HTTP_INTERNAL_SERVER_ERROR, $ex->getMessage());
+        }
     }
 
     /**
@@ -98,7 +107,31 @@ class UserController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        try {
+
+            $user = User::find($id);
+            if (empty($user)) {
+                throw new \ErrorException( 'Usuario existe');
+            }
+
+            $user->name = $request->name;
+            $user->email = $request->email;
+            $user->save();
+
+            if ($user->people) {
+                $user->people->name = $request->name;
+                $user->people->phone = $request->phone;
+                $user->people->email = $request->email;
+                $user->people->address = $request->address;
+
+                $user->people->save();
+            }
+
+            return response_data($user, Response::HTTP_OK, 'Usuario Actualizado correctamente.');
+
+        } catch (\Exception $ex) {
+            return response_data([], Response::HTTP_INTERNAL_SERVER_ERROR, $ex->getMessage());
+        }
     }
 
     /**
@@ -108,6 +141,20 @@ class UserController extends Controller
      */
     public function destroy($id)
     {
-        //
+        try {
+
+            $user = User::find($id);
+            if (empty($user)) {
+                throw new \ErrorException( 'Usuario existe');
+            }
+
+            $user->people->delete();
+            $user->delete();
+
+            return response_data($user, Response::HTTP_OK, 'Usuario Eliminado correctamente.');
+
+        } catch (\Exception $ex) {
+            return response_data([], Response::HTTP_INTERNAL_SERVER_ERROR, $ex->getMessage());
+        }
     }
 }
