@@ -78,7 +78,18 @@ class ProductsController extends Controller
      */
     public function edit($id)
     {
-        return view('products::edit');
+        try {
+
+            $product = Product::find($id);
+            if (empty($product)) {
+                throw new \ErrorException( 'Producto no existe');
+            }
+
+            return response_data($product, Response::HTTP_OK, 'Producto Leído correctamente.');
+
+        } catch (\Exception $ex) {
+            return response_data([], Response::HTTP_INTERNAL_SERVER_ERROR, $ex->getMessage());
+        }
     }
 
     /**
@@ -89,7 +100,26 @@ class ProductsController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        try {
+
+            $product = Product::find($id);
+            if (empty($product)) {
+                throw new \ErrorException( 'Producto no existe');
+            }
+
+            $product->barcode = $request->barcode;
+            $product->description = $request->description;
+            $product->purchase_price = $request->purchase_price;
+            $product->sale_price = $request->sale_price;
+            $product->existence = $request->existence;
+
+            $product->save();
+
+            return response_data($product, Response::HTTP_OK, 'Producto Actualizado correctamente.');
+
+        } catch (\Exception $ex) {
+            return response_data([], Response::HTTP_INTERNAL_SERVER_ERROR, $ex->getMessage());
+        }
     }
 
     /**
@@ -99,6 +129,19 @@ class ProductsController extends Controller
      */
     public function destroy($id)
     {
-        //
+        try {
+
+            $product = Product::find($id);
+            if (empty($product)) {
+                throw new \ErrorException( 'Producto no existe');
+            }
+
+            $product->delete();
+
+            return response_data($product, Response::HTTP_OK, 'Producto Eliminado correctamente.');
+
+        } catch (\Exception $ex) {
+            return response_data([], Response::HTTP_INTERNAL_SERVER_ERROR, $ex->getMessage());
+        }
     }
 }
