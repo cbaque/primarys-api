@@ -53,7 +53,7 @@ class AuthController extends Controller
             }
 
             if (auth()->user()->business_id !== $business->id) {
-                throw new \ErrorException( 'Usuario no perteneces a esa empresa.');
+                throw new \ErrorException( 'Usuario no pertenece a esa empresa.');
             }
 
             $token = Auth::user()->createToken('authToken')->accessToken;
